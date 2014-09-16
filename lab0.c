@@ -99,9 +99,15 @@ int main(void)
 	TRISBbits.TRISB13 = 0;
 	TRISBbits.TRISB12 = 0;
 
+        LATBbits.LATB15 = 1;
+        LATBbits.LATB14 = 1;
+        LATBbits.LATB13 = 1;
+        LATBbits.LATB12 = 1;
+
 	// **TODO** SW1 of the 16-bit 28-pin Starter Board is connected to pin RB??. 
 	// Assign the TRISB bit for this pin to configure this port as an input.
 
+        TRISBbits.TRISB5 = 1;
 
 	// Clear Timer value (i.e. current tiemr value) to 0
 	TMR1 = 0;				
@@ -205,6 +211,30 @@ int main(void)
 				// entered. We can do this by subtracting the value for 
 				// the character '0'.
 				ledToToggle = receivedChar - '0';
+
+                                if( receivedChar == '4' ) {
+                                    LATBbits.LATB14 = 1;
+                                    LATBbits.LATB13 = 1;
+                                    LATBbits.LATB12 = 1;
+                                }
+
+                                if( receivedChar == '5' ) {
+                                    LATBbits.LATB15 = 1;
+                                    LATBbits.LATB13 = 1;
+                                    LATBbits.LATB12 = 1;
+                                }
+
+                                if( receivedChar == '6' ) {
+                                    LATBbits.LATB15 = 1;
+                                    LATBbits.LATB14 = 1;
+                                    LATBbits.LATB12 = 1;
+                                }
+
+                                if( receivedChar == '7' ) {
+                                    LATBbits.LATB15 = 1;
+                                    LATBbits.LATB14 = 1;
+                                    LATBbits.LATB13 = 1;
+                                }
 
 				// Print a confirmation message.
 				printf("Toggling LED%d\n\r", ledToToggle);
