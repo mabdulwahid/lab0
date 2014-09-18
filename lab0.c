@@ -35,7 +35,7 @@
 // program the PIC for standalone operation, change the COE_ON option to COE_OFF.
 
 _CONFIG1( JTAGEN_OFF & GCP_OFF & GWRP_OFF & 	
-          BKBUG_ON & COE_ON & ICS_PGx1 & 
+          BKBUG_ON & COE_OFF & ICS_PGx1 &
           FWDTEN_OFF & WINDIS_OFF & FWPSA_PR128 & WDTPS_PS32768 )
 
 
@@ -76,6 +76,8 @@ int main(void)
 {
 	// Varaible for character recived by UART.
 	int receivedChar;
+        //Variable to check when the button is initially presses or initially released.
+        int check;
 
 	//RPINR18 is a regsiter for selectable input mapping (see Table 10-2) for 
 	// for UART1. U1RX is 8 bit value used to specifiy connection to which
@@ -99,6 +101,7 @@ int main(void)
 	TRISBbits.TRISB13 = 0;
 	TRISBbits.TRISB12 = 0;
 
+        //Turn RB15, RB14, RB13, and RB12 off.
         LATBbits.LATB15 = 1;
         LATBbits.LATB14 = 1;
         LATBbits.LATB13 = 1;
@@ -193,8 +196,25 @@ int main(void)
 		// the initially defined rate.
 
 
+            //When SW1 is pressed and is the first time being pressed
+            if( PORTBbits.RB5 == 0 && check == 0 ) {
+                check = 1;
+                //Half the original PR1 value causes the LEDs to blink twice as fast
+                PR1 = 7200;
+                TMR1 = 0;
+            }
+            //When SW1 is release and is the first time being released
+            else if( PORTBbits.RB5 == 1 && check == 1 ) {
+                check = 0;
+                PR1 = 14400;
+                TMR1 = 0;
+            }
+
+
 		// Use the UART RX interrupt flag to wait until we recieve a character.
-		if(IFS0bits.U1RXIF == 1) {	
+		if(IFS0bits.U1RXIF == 1) {
+
+                    
 
 			// U1RXREG stores the last character received by the UART. Read this 
 			// value into a local variable before processing.
@@ -210,30 +230,35 @@ int main(void)
 				// Assign ledToToggle to the number corresponding to the number 
 				// entered. We can do this by subtracting the value for 
 				// the character '0'.
-				ledToToggle = receivedChar - '0';
+				ledToToggle = receivedChar - '0';                                
 
+                                //When one LED is selected, turn off all other LEDs.
                                 if( receivedChar == '4' ) {
                                     LATBbits.LATB14 = 1;
                                     LATBbits.LATB13 = 1;
-                                    LATBbits.LATB12 = 1;
+                                    LATBbits.LATB12 = 1;                                    
+//                                    
                                 }
 
                                 if( receivedChar == '5' ) {
                                     LATBbits.LATB15 = 1;
                                     LATBbits.LATB13 = 1;
                                     LATBbits.LATB12 = 1;
+//                                    
                                 }
 
                                 if( receivedChar == '6' ) {
                                     LATBbits.LATB15 = 1;
                                     LATBbits.LATB14 = 1;
                                     LATBbits.LATB12 = 1;
+                                    
                                 }
 
                                 if( receivedChar == '7' ) {
                                     LATBbits.LATB15 = 1;
                                     LATBbits.LATB14 = 1;
                                     LATBbits.LATB13 = 1;
+                                    
                                 }
 
 				// Print a confirmation message.
@@ -250,7 +275,7 @@ int main(void)
 
 			// Re-print the message requesting the user to select a LED to toggle.
 			printf("Select LED to Toggle (4-7): ");
-		}
+		}            
 	}
 
 	return 0;
@@ -268,7 +293,7 @@ int main(void)
 //
 // The functionality defined in an interrupt should be a minimal as possible
 // to ensure additional interrupts can be processed. 
-void _ISR _T1Interrupt(void)
+void __attribute__((interrupt,auto_psv)) _T1Interrupt(void)
 {
 	// Clear Timer 1 interrupt flag to allow another Timer 1 interrupt to occur.
 	IFS0bits.T1IF = 0;		
